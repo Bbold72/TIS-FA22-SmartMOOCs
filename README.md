@@ -1,3 +1,5 @@
-# CourseProject
+# Intelligent Learning Platforms: Segmenting Lecture Videos Based on Topic Change
 
-Please fork this repository and paste the github link of your fork on Microsoft CMT. Detailed instructions are on Coursera under Week 1: Course Project Overview/Week 9 Activities.
+| **Name**              | **User ID**     | **Role**       |
+|-----------------------|-----------------|----------------|
+|     Brian Reinbold    |     brianjr3    |     Captain    |
