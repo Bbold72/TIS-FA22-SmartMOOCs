@@ -3,19 +3,29 @@ import datetime
 import nltk
 from nltk.text import TextCollection
 import numpy as np
+import os
+from pathlib import Path
 from scipy import spatial
 import seaborn as sns
 nltk.download('punkt')
 nltk.download('stopwords')
 stop_words = set(nltk.corpus.stopwords.words('english'))
 
+import sys
+
+from src import utils
+
+ROOT_DIR = utils.get_project_root()
+DATA_DIR = Path.joinpath(ROOT_DIR, 'data')
+DATA_RAW_DIR = Path.joinpath(DATA_DIR, 'raw')
 
 ### Parameters ###
 TIME_DELTA = 30
 
 segments = []
 seg = []
-file_name = '../../data/raw/cs-410/04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea.en.srt'
+file_name = Path.joinpath(DATA_RAW_DIR,'cs-410/04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea.en.srt')
+
 with open(file_name, 'r') as f:
     for line in f:
         if line != '\n':
@@ -26,7 +36,6 @@ with open(file_name, 'r') as f:
             seg = list()
 for s in segments:
     print(s)
-
 Segment = namedtuple('Segment', ['id', 'beg', 'end', 'text'])
 for i, seg in enumerate(segments):
     beg, end = seg[1].split(' --> ')
@@ -118,4 +127,7 @@ print(similarities)
 from matplotlib import pyplot as plt
 plt.plot([i*TIME_DELTA for i in range(len(similarities))], similarities)
 # plt.ylim([0, 1])
-plt.show()
+# plt.show()
+
+
+
