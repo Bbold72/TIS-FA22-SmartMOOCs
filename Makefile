@@ -1,4 +1,4 @@
-.PHONY: clean run
+.PHONY: clean run similarities
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -18,12 +18,15 @@ endif
 ## Make Dataset
 run: clean data
 
-data: transcripts
+data: transcripts similarities
 
 transcripts: 
 	@$(PYTHON_INTERPRETER) src/data/process_transcripts.py
 	@echo ">>> Processing transcripts"
 
+similarities: 
+	@$(PYTHON_INTERPRETER) src/data/calc_segment_similarities.py
+	@echo ">>> Calculating segment similarities"
 
 
 ## Delete all compiled Python files and processed datasets

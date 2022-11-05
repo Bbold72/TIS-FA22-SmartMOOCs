@@ -8,13 +8,7 @@ from typing import List
 
 
 from src import utils
-
-@dataclass
-class Segment:
-    id: int
-    beg: datetime.datetime
-    end: datetime.datetime
-    text: str
+from src.utils import Segment
 
 
 ROOT_DIR = utils.get_project_root()
