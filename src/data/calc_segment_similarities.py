@@ -21,6 +21,7 @@ from src.utils import Segment
 
 ### Parameters ###
 TIME_DELTA = 30
+USE_COS = True
 
 
 ROOT_DIR = utils.get_project_root()
@@ -36,31 +37,42 @@ diff = s.end - s.beg
 print(diff)
 print(diff < interval)
 
-documents = []
-doc = []
-interval_so_far = datetime.timedelta(seconds=0)
-for seg in transcript_segments:
-    doc.append(seg)
-    diff = seg.end - seg.beg
-    interval_so_far += diff
-    if interval_so_far > interval:
-        documents.append(doc)
-        doc = list()
-        interval_so_far = datetime.timedelta(seconds=0)
-else:
-    if doc:
-        documents.append(doc)
-print(doc)
+
+def merge_documents(docs: List[Segment], id: int) -> Segment:
+    return Segment(id=id, beg=docs[0].beg, end=docs[0].end, text=' '.join([seg.text for seg in docs]))
+
+def create_documents(transcript_segments: List[Segment], time_interval: datetime.timedelta) -> List[Segment]:
+    documents = []
+    doc = []
+    interval_so_far = datetime.timedelta(seconds=0)
+    id = 0
+    for segment in transcript_segments:
+        doc.append(segment)
+        diff = segment.end - segment.beg
+        interval_so_far += diff
+        if interval_so_far > time_interval:
+            documents.append(merge_documents(doc, id))
+            id += 1
+            doc = list()
+            interval_so_far = datetime.timedelta(seconds=0)
+    else:
+        if doc:
+            documents.append(merge_documents(doc, id))
+    print(doc)
+
+    return documents
+
+documents = create_documents(transcript_segments, interval)
 
 for i in range(3):
     print(documents[i])
 print(documents[-1])
 
-for i, doc in enumerate(documents):
-    documents[i] = Segment(id=i, beg=doc[0].beg, end=doc[0].end, text=' '.join([seg.text for seg in doc]))
 
-for d in documents:
-    print(d)
+# for i, doc in enumerate(documents):
+#     documents[i] = Segment(id=i, beg=doc[0].beg, end=doc[0].end, text=' '.join([seg.text for seg in doc]))
+
+
 
 # texts = [nltk.word_tokenize(doc.text.lower()) for doc in documents]
 texts = [list(set(nltk.word_tokenize(doc.text.lower())) - stop_words) for doc in documents]
@@ -95,16 +107,23 @@ print(vec2)
 result = 1 - spatial.distance.cosine(vec1, vec2)
 print(result)
 
-similarities = []
-for i in range(len(texts)):
-    vec1 = make_word_vec(i-1)
-    vec2 = make_word_vec(i)
+def calc_similarity_ts(texts: List[str], use_cos: bool=True):
+    if use_cos:
+        f = lambda v1, v2: 1 - spatial.distance.cosine(v1, v2)
+    else:
+        f = lambda v1, v2: spatial.distance.jensenshannon(v1, v2)
 
-    result = 1 - spatial.distance.cosine(vec1, vec2)
-    # result = 1 - spatial.distance.jensenshannon(vec1, vec2)
+    similarities = []
+    for i in range(1, len(texts)):
+        vec1 = make_word_vec(i-1)
+        vec2 = make_word_vec(i)
+
+        similarities.append(f(vec1, vec2))
     
+    return similarities
 
-    similarities.append(result)
+similarities = calc_similarity_ts(texts, use_cos=USE_COS)
+
 print(similarities)
 
 from matplotlib import pyplot as plt
