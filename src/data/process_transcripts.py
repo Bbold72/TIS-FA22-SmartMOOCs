@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import datetime
 import pandas as pd
 from pathlib import Path
@@ -73,26 +72,41 @@ def process_transcript(file_path: Path) -> List[Segment]:
 
 
 def main():
-    file_name = '04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea.en.srt'
-    file_path = Path.joinpath(DATA_RAW_DIR, file_name)
 
-    transcript_segments = process_transcript(file_path)
+    # get all file paths to raw transcript files
+    files = DATA_RAW_DIR.rglob('*.srt')
 
-    for s in transcript_segments:
-        print(s)
+
+    transcripts = dict()
+    dataframes = list()
+
+    for f in files:
+
+        # separate raw data directory from rest of path
+        # used to group sements by transcript
+        file_name = str(f.relative_to(DATA_RAW_DIR)).strip()[:-len('.en.srt')]  # remove file extension
+
+        # process raw transcript file into segments
+        transcript_segments = process_transcript(file_path=f)
+
+        # add segments to dictionary
+        transcripts[file_name] = transcript_segments
+
+        # convert segments to dataframe
+        df = pd.DataFrame(transcript_segments)
+        df['file_name'] = file_name
+        dataframes.append(df)
 
     # output file to intermediate folder taking file extension as input
     output_file = lambda ext: Path.joinpath(INTERMEDATE_DATA_DIR, f'transcripts.{ext}')
 
     # output data as pickle file
     with open(output_file('pkl'), 'wb') as f:
-        pickle.dump(transcript_segments, f)
-
-    df = pd.DataFrame(transcript_segments).set_index('id')
-    df['file_name'] = file_name
-    print(df)
+        pickle.dump(transcripts, f)
+    
+    # output as dataframe
+    df = pd.concat(dataframes, axis=0)
     df.to_csv(output_file('csv'))
-
 
 
 if __name__ == '__main__':

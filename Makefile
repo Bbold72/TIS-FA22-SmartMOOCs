@@ -21,12 +21,13 @@ run: clean data
 data: transcripts similarities
 
 transcripts: 
-	@$(PYTHON_INTERPRETER) src/data/process_transcripts.py
 	@echo ">>> Processing transcripts"
+	@$(PYTHON_INTERPRETER) src/data/process_transcripts.py
+	
 
 similarities: 
-	@$(PYTHON_INTERPRETER) src/data/calc_segment_similarities.py
 	@echo ">>> Calculating segment similarities"
+	@$(PYTHON_INTERPRETER) src/data/calc_segment_similarities.py
 
 
 ## Delete all compiled Python files and processed datasets
