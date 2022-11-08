@@ -1,5 +1,3 @@
-from collections import namedtuple
-from dataclasses import dataclass
 import datetime
 import nltk
 from nltk.text import TextCollection
@@ -20,7 +18,7 @@ from src import utils
 from src.utils import Segment
 
 ### Parameters ###
-TIME_DELTA = 30
+TIME_DELTA = 45
 USE_COS = True
 
 
@@ -59,8 +57,11 @@ def create_documents(transcript_segments: List[Segment], time_interval: datetime
 
 
 def calc_similarity_ts(documents: List[Segment], use_cos: bool=True):
-   # texts = [nltk.word_tokenize(doc.text.lower()) for doc in documents]
-    texts = [list(set(nltk.word_tokenize(doc.text.lower())) - stop_words) for doc in documents]
+    texts = [nltk.word_tokenize(doc.text.lower()) for doc in documents]
+
+    # remove stop words 
+    for i in range(len(texts)):
+        texts[i] = [word for word in texts[i] if word not in stop_words]
 
 
     # centered moving text collection
@@ -82,10 +83,11 @@ def calc_similarity_ts(documents: List[Segment], use_cos: bool=True):
     print('\n'*5)
     print([w for w in text_collection.vocab()])
     print()
-    print(texts[1], len(texts[1]))
+    print(texts[2], len(texts[2]))
+    print(texts[3], len(texts[3]))
     make_word_vec = lambda doc_id: np.array([text_collection.tf(word, texts[doc_id]) for word in text_collection.vocab()])
-    vec1 = make_word_vec(1)
-    vec2 = make_word_vec(2)
+    vec1 = make_word_vec(2)
+    vec2 = make_word_vec(3)
     print(vec1)
     print(vec2)
     result = 1 - spatial.distance.cosine(vec1, vec2)
@@ -114,8 +116,7 @@ def calc_similarity_ts(documents: List[Segment], use_cos: bool=True):
 def main():
     with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'transcripts.pkl'), 'rb') as f:
         transcripts = pickle.load(f)
-    for key in transcripts.keys():
-        print(key)
+
     transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
 
     interval = datetime.timedelta(seconds=TIME_DELTA)
@@ -125,14 +126,6 @@ def main():
     print(diff < interval)
 
     documents = create_documents(transcript_segments, interval)
-
-    for i in range(3):
-        print(documents[i])
-    print(documents[-1])
-
-
-    # for i, doc in enumerate(documents):
-    #     documents[i] = Segment(id=i, beg=doc[0].beg, end=doc[0].end, text=' '.join([seg.text for seg in doc]))
 
 
     similarities = calc_similarity_ts(documents, use_cos=USE_COS)
