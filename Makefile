@@ -1,4 +1,4 @@
-.PHONY: clean run similarities
+.PHONY: clean run corpus
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -18,16 +18,16 @@ endif
 ## Make Dataset
 run: clean data
 
-data: transcripts similarities
+data: transcripts corpus
 
 transcripts: 
 	@echo ">>> Processing transcripts"
 	@$(PYTHON_INTERPRETER) src/data/process_transcripts.py
 	
 
-similarities: 
-	@echo ">>> Calculating segment similarities"
-	@$(PYTHON_INTERPRETER) src/data/calc_segment_similarities.py
+corpus: 
+	@echo ">>> Making document corpus and calculating document similarities"
+	@$(PYTHON_INTERPRETER) src/data/make_corpus.py
 
 
 ## Delete all compiled Python files and processed datasets
@@ -36,7 +36,3 @@ clean:
 	@find . -type f -name "*.py[co]" -delete
 	@find . -type d -name "__pycache__" -delete
 	@find data/intermediate ! -name '.gitkeep' -type f -exec rm -f {} +
-
-# clean:
-# 	rm -rf __pycache__
-# 	rm -rf venv
