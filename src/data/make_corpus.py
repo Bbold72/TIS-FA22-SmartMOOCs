@@ -185,15 +185,26 @@ def main():
     with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'transcripts.pkl'), 'rb') as f:
         transcripts = pickle.load(f)
     
-    transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
-
     interval = datetime.timedelta(seconds=TIME_DELTA)
 
-    corpus = Corpus(transcript_segments, interval)
-    corpus.create_vocabulary(remove_stop_words=True)
-    corpus.create_term_doc_freq_matrix()
-    corpus.calc_similarity_ts()
 
+
+    for transcript_name, transcript_segments in transcripts.items():
+    # transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
+
+
+        corpus = Corpus(transcript_segments, interval)
+        corpus.create_vocabulary(remove_stop_words=True)
+        corpus.create_term_doc_freq_matrix()
+        corpus.calc_similarity_ts()
+
+        transcripts[transcript_name] = corpus
+
+
+    # output data as pickle file
+    print('saving corpuses')
+    with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'corpus.pkl'), 'wb') as f:
+        pickle.dump(transcripts, f)
 
 if __name__ == '__main__':
     main()
