@@ -15,15 +15,11 @@ import sys
 from src import utils
 from src.utils import Segment
 
-### Parameters ###
-TIME_DELTA = 60
-USE_COS = True
 
 
 ROOT_DIR = utils.get_project_root()
 DATA_DIR = Path.joinpath(ROOT_DIR, 'data')
 INTERMEDATE_DATA_DIR = Path.joinpath(DATA_DIR, 'intermediate')
-
 
 class Vocabulary:
 
@@ -152,26 +148,31 @@ class Corpus:
 
 
 def main():
+    TIME_DELTAS = [30, 45, 60]
     with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'transcripts.pkl'), 'rb') as f:
         transcripts = pickle.load(f)
     
-
+    corpuses = dict()
     for transcript_name, transcript_segments in transcripts.items():
-    # transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
-
+        corpuses[transcript_name] = dict()
         vocab = Vocabulary(transcript_segments, remove_stop_words=True)
-        documents = utils.merge_documents_time_interval(vocab.transcript_segements, TIME_DELTA)
-        corpus = Corpus(vocab, documents)
 
-        corpus.create_term_doc_freq_matrix()
-        corpus.calc_similarity_ts()
-        transcripts[transcript_name] = corpus
+        for TIME_DELTA in TIME_DELTAS:
+        # transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
+
+            documents = utils.merge_documents_time_interval(vocab.transcript_segements, TIME_DELTA)
+            corpus = Corpus(vocab, documents)
+
+            corpus.create_term_doc_freq_matrix()
+            corpus.calc_similarity_ts()
+            corpuses[transcript_name][TIME_DELTA] = corpus
 
 
     # output data as pickle file
     print('saving corpuses')
-    with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'corpuses.pkl'), 'wb') as f:
-        pickle.dump(transcripts, f)
+    with open(Path.joinpath(INTERMEDATE_DATA_DIR, f'corpuses.pkl'), 'wb') as f:
+        pickle.dump(corpuses, f)
+
 
 if __name__ == '__main__':
     main()
