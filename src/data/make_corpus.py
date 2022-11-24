@@ -104,9 +104,6 @@ class Corpus:
             - List[Segment] - new list transcript segments that fall within time interval
 
         '''
-        def merge_documents(docs: List[Segment], id: int) -> Segment:
-            return Segment(id=id, beg=docs[0].beg, end=docs[-1].end, text=' '.join([seg.text for seg in docs]))
-
         documents = []
         doc = []
         interval_so_far = datetime.timedelta(seconds=0)
@@ -116,7 +113,7 @@ class Corpus:
             diff = segment.end - segment.beg
             interval_so_far += diff
             if interval_so_far > time_interval or i == len(transcript_segments) - 1:
-                documents.append(merge_documents(doc, id))
+                documents.append(utils.merge_documents(doc, id))
                 id += 1
                 doc = list()
                 interval_so_far = datetime.timedelta(seconds=0)
@@ -150,7 +147,7 @@ class Corpus:
         calculates the similarity between sequential document pairs
         uses cosine similarity and jesnen shannoun divergence
 
-        Args: Noe
+        Args: None
         
         returns: None
             initializes ts_cos_similarity, ts_divergence_similarity
@@ -203,7 +200,7 @@ def main():
 
     # output data as pickle file
     print('saving corpuses')
-    with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'corpus.pkl'), 'wb') as f:
+    with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'corpuses.pkl'), 'wb') as f:
         pickle.dump(transcripts, f)
 
 if __name__ == '__main__':
