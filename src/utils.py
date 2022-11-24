@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import datetime
+import itertools
 from pathlib import Path
 from typing import List
 
@@ -10,6 +11,7 @@ class Segment:
     beg: datetime.datetime
     end: datetime.datetime
     text: str
+    tokens: List[str] = None
 
 
 def get_project_root() -> Path:
@@ -26,4 +28,39 @@ def merge_documents(docs: List[Segment], id: int) -> Segment:
     
     returns: Segment
     '''
-    return Segment(id=id, beg=docs[0].beg, end=docs[-1].end, text=' '.join([seg.text for seg in docs]))
+    return Segment(id=id, 
+                    beg=docs[0].beg, 
+                    end=docs[-1].end, 
+                    text=' '.join([seg.text for seg in docs]), 
+                    tokens=list(itertools.chain.from_iterable([seg.tokens for seg in docs if seg.tokens is not None]))
+                    )
+
+
+# TODO: adjust constraints so segments fall within time interval instead of just outside of it
+def merge_documents_time_interval(documents: List[Segment], time_interval: int) -> List[Segment]:
+    '''
+    Merges the transcript segments that falls within the time interval
+
+    Args:
+        - transcript_segments: List[Segment] - list of trascript segments
+        - time_interval: datetime.timedelta - size of time interval
+    
+    returns: 
+        - List[Segment] - new list transcript segments that fall within time interval
+
+    '''
+    new_doc_list = []
+    doc = []
+    interval_so_far = datetime.timedelta(seconds=0)
+    time_interval  = datetime.timedelta(seconds=time_interval)
+    id = 0
+    for i, segment in enumerate(documents):
+        doc.append(segment)
+        diff = segment.end - segment.beg
+        interval_so_far += diff
+        if interval_so_far > time_interval or i == len(documents) - 1:
+            new_doc_list.append(merge_documents(doc, id))
+            id += 1
+            doc = list()
+            interval_so_far = datetime.timedelta(seconds=0)
+    return new_doc_list

@@ -25,104 +25,18 @@ DATA_DIR = Path.joinpath(ROOT_DIR, 'data')
 INTERMEDATE_DATA_DIR = Path.joinpath(DATA_DIR, 'intermediate')
 
 
+class Vocabulary:
 
-
-class Corpus:
-
-    def __init__(self, transcript_segments: List[Segment], time_interval: datetime.timedelta) -> List[Segment]:
-
-        self.time_interval: datetime.timedelta = time_interval
-        self.documents: List[Segment] = self._create_documents(transcript_segments, time_interval)
-        self.num_docs: int = len(self.documents)
-
+    def __init__(self, transcript_segments: List[Segment], remove_stop_words: bool = True) -> None:
+        self.transcript_segements = transcript_segments
         self.vocabulary: List = []
         self.size_vocabulary: int = 0
         self.term2idx: Dict[str:int] = dict()
 
+        self._create_vocabulary(remove_stop_words=remove_stop_words)
 
 
-
-    def create_vocabulary(self, remove_stop_words: bool) -> None:
-        '''
-        Tokenizes data and initializes corpus' vocabulary 
-        Adds list of tokens to Segment
-
-        Args:
-            - remove_stop_words: bool - if true, removes stops words
-                defined in NLTK
-        
-        returns: None
-            initializes vocabulary, size_vocabulary, term2idx
-        '''
-        vocab = set()
-        for i, document in enumerate(self.documents):
-            tokens = self._tokenize(document.text, remove_stop_words)
-            document.tokens = tokens
-            self.documents[i] = document
-            vocab.update(tokens)
-
-        self.vocabulary = sorted(list(vocab))
-        self.size_vocabulary = len(vocab)
-        self.term2idx = {word:idx for word, idx in zip(vocab, range(len(vocab)))}
-
-
-    def create_term_doc_freq_matrix(self) -> None:
-        '''
-        creates term-document frequency matrix
-
-        Args: None
-        
-        returns: None
-            initializes term_doc_freq_matrix
-        '''
-        term_freq_docs = []
-        for doc in self.documents:
-            term_freq_docs.append(Counter(doc.tokens))
-
-        term_document_matrix = np.zeros((self.size_vocabulary, self.num_docs))
-
-
-        for idx_doc, term_freq in enumerate(term_freq_docs):
-            for word, freq in term_freq.items():
-                term_document_matrix[self.term2idx[word], idx_doc] = freq
-
-        term_document_matrix /= term_document_matrix.sum(axis=0)
-
-        self.term_doc_freq_matrix = term_document_matrix
-
-
-    # TODO: adjust constraints so segments fall within time interval instead of just outside of it
-    def _create_documents(self, transcript_segments: List[Segment], time_interval: datetime.timedelta) -> List[Segment]:
-        '''
-        Merges the transcript segments that falls within the time interval
-
-        Args:
-            - transcript_segments: List[Segment] - list of trascript segments
-            - time_interval: datetime.timedelta - size of time interval
-        
-        returns: 
-            - List[Segment] - new list transcript segments that fall within time interval
-
-        '''
-        documents = []
-        doc = []
-        interval_so_far = datetime.timedelta(seconds=0)
-        id = 0
-        for i, segment in enumerate(transcript_segments):
-            doc.append(segment)
-            diff = segment.end - segment.beg
-            interval_so_far += diff
-            if interval_so_far > time_interval or i == len(transcript_segments) - 1:
-                documents.append(utils.merge_documents(doc, id))
-                id += 1
-                doc = list()
-                interval_so_far = datetime.timedelta(seconds=0)
-
-
-        return documents
-
-
-    def _tokenize(self, text: str, remove_stop_words: bool=True) -> List[str]:
+    def _tokenize(self, text: str, remove_stop_words: bool) -> List[str]:
         '''
         splits text into tokens
 
@@ -140,6 +54,65 @@ class Corpus:
             tokens = [word for word in tokens if word not in stop_words]
 
         return tokens
+
+
+    def _create_vocabulary(self, remove_stop_words: bool) -> None:
+        '''
+        Tokenizes data and initializes corpus' vocabulary 
+        Adds list of tokens to Segment
+
+        Args:
+            - remove_stop_words: bool - if true, removes stops words
+                defined in NLTK
+        
+        returns: None
+            initializes vocabulary, size_vocabulary, term2idx
+        '''
+        vocab = set()
+        for i, document in enumerate(self.transcript_segements):
+            tokens = self._tokenize(document.text, remove_stop_words)
+            document.tokens = tokens
+            self.transcript_segements[i] = document
+            vocab.update(tokens)
+
+        self.vocabulary = sorted(list(vocab))
+        self.size_vocabulary = len(vocab)
+        self.term2idx = {word:idx for word, idx in zip(vocab, range(len(vocab)))}
+
+
+
+class Corpus:
+
+    def __init__(self, vocab: Vocabulary, documents: List[Segment]) -> None:
+
+        self.documents: List[Segment] = documents
+        self.num_docs: int = len(self.documents)
+        self.vocab = vocab
+
+
+    def create_term_doc_freq_matrix(self) -> None:
+        '''
+        creates term-document frequency matrix
+
+        Args: None
+        
+        returns: None
+            initializes term_doc_freq_matrix
+        '''
+        term_freq_docs = []
+        for doc in self.documents:
+            term_freq_docs.append(Counter(doc.tokens))
+
+        term_document_matrix = np.zeros((self.vocab.size_vocabulary, self.num_docs))
+
+
+        for idx_doc, term_freq in enumerate(term_freq_docs):
+            for word, freq in term_freq.items():
+                term_document_matrix[self.vocab.term2idx[word], idx_doc] = freq
+
+        term_document_matrix /= term_document_matrix.sum(axis=0)
+
+        self.term_doc_freq_matrix = term_document_matrix
 
 
     def calc_similarity_ts(self) -> None:
@@ -182,19 +155,16 @@ def main():
     with open(Path.joinpath(INTERMEDATE_DATA_DIR, 'transcripts.pkl'), 'rb') as f:
         transcripts = pickle.load(f)
     
-    interval = datetime.timedelta(seconds=TIME_DELTA)
-
-
 
     for transcript_name, transcript_segments in transcripts.items():
     # transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']
 
+        vocab = Vocabulary(transcript_segments, remove_stop_words=True)
+        documents = utils.merge_documents_time_interval(vocab.transcript_segements, TIME_DELTA)
+        corpus = Corpus(vocab, documents)
 
-        corpus = Corpus(transcript_segments, interval)
-        corpus.create_vocabulary(remove_stop_words=True)
         corpus.create_term_doc_freq_matrix()
         corpus.calc_similarity_ts()
-
         transcripts[transcript_name] = corpus
 
 
