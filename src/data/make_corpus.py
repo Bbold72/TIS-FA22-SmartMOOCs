@@ -91,7 +91,7 @@ class Corpus:
         self.term_doc_freq_matrix = term_document_matrix
 
 
-    # TODO: adjust constrains so segments fall within time interval instead of just outside of it
+    # TODO: adjust constraints so segments fall within time interval instead of just outside of it
     def _create_documents(self, transcript_segments: List[Segment], time_interval: datetime.timedelta) -> List[Segment]:
         '''
         Merges the transcript segments that falls within the time interval
@@ -105,7 +105,7 @@ class Corpus:
 
         '''
         def merge_documents(docs: List[Segment], id: int) -> Segment:
-            return Segment(id=id, beg=docs[0].beg, end=docs[0].end, text=' '.join([seg.text for seg in docs]))
+            return Segment(id=id, beg=docs[0].beg, end=docs[-1].end, text=' '.join([seg.text for seg in docs]))
 
         documents = []
         doc = []
