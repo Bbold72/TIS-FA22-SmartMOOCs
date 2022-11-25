@@ -16,7 +16,7 @@ endif
 #################################################################################
 
 ## Make Dataset
-run: clean data
+run: clean data breakpoints
 
 data: transcripts corpus
 
@@ -28,6 +28,11 @@ transcripts:
 corpus: 
 	@echo ">>> Making document corpus and calculating document similarities"
 	@$(PYTHON_INTERPRETER) src/data/make_corpus.py
+
+
+breakpoints: 
+	@echo ">>> Calculating breakpoints"
+	@$(PYTHON_INTERPRETER) src/models/breakpoints.py
 
 
 ## Delete all compiled Python files and processed datasets
