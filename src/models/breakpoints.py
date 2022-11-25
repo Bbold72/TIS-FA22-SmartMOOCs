@@ -81,12 +81,16 @@ if __name__ == '__main__':
 
         # create a mapping from 10 second interval to 60 second intervals
         naive_time_label_map = utils.make_segment_label_mapping(base_corpus.documents, corpus_times[60].documents)
-
-        for time_delta, corpus in corpus_times.items():       # loop through each time interval
+        naive_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, naive_time_label_map) # naive, 60 second topic transition score
+        corpus_times['base_60'] = corpus_times[60]
+        for time_delta, corpus in corpus_times.items():                            # loop through each time interval
 
             # calc breakpoint and make new document corpus based on them
-            breakpoints = calc_breakpoints(corpus.ts_cos_similarity)    
-            subtopic_docs = merge_documents_breakpoints(corpus.documents, breakpoints)
+            if time_delta == 'base_60':
+                subtopic_docs = corpus.documents
+            else:
+                breakpoints = calc_breakpoints(corpus.ts_cos_similarity)    
+                subtopic_docs = merge_documents_breakpoints(corpus.documents, breakpoints)
             topic_transitions_corpus = Corpus(corpus.vocab, subtopic_docs)
             topic_transitions_corpus.create_term_doc_freq_matrix()
             topic_transitions_corpus.calc_similarity_ts()
@@ -94,11 +98,11 @@ if __name__ == '__main__':
             # evaluate
             # create a mapping from 10 second intervals to model predicted topic transitions
             subtopic_label_map = utils.make_segment_label_mapping(base_corpus.documents, topic_transitions_corpus.documents)
+            model_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map)   # model topic transition score
 
             # calculate silhouettes scores
             if transcript_name == '04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea':
-                print(silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map))   # model topic transition score
-                print(silhouette_score(base_corpus.term_doc_freq_matrix.T, naive_time_label_map)) # naive, 60 second topic transition score
+                print(time_delta, naive_score, model_score)
 
             # add to dict
             topic_transitions_corpuses[transcript_name][time_delta] = topic_transitions_corpus
@@ -107,7 +111,10 @@ if __name__ == '__main__':
             df = pd.DataFrame(subtopic_docs)
             df['file_name'] = transcript_name
             df['time_interval'] = time_delta
+            df['silhouette_score'] = model_score
             dataframes.append(df)
+
+    
 
     # output file to intermediate folder taking file extension as input
     output_file = lambda ext: Path.joinpath(INTERMEDATE_DATA_DIR, f'topic_transitions.{ext}')
@@ -120,6 +127,12 @@ if __name__ == '__main__':
 
     # export dataframe
     df = pd.concat(dataframes, axis=0)
+    df['best'] = df.groupby(['file_name'])['silhouette_score'].transform(max) == df['silhouette_score']
+    # df['best'] = np.where(df['best'] == df['silhouette_score'],
+    #                         1,
+    #                         0
+    #                         )
+
     df.to_csv(output_file('csv'), index=False)
     print(df)
     print(df.groupby(['file_name', 'time_interval']).agg({'end' : ['count', 'max']}))
