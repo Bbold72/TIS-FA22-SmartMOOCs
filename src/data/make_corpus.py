@@ -1,10 +1,13 @@
 from collections import Counter
 import datetime
 import nltk
+from nltk.stem import PorterStemmer
 import numpy as np
 from pathlib import Path
 import pickle
+import re
 from scipy import spatial
+import string
 from typing import Dict, List
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -43,11 +46,31 @@ class Vocabulary:
         returns: List[str]
             list of word tokens
         '''
-        tokens = nltk.word_tokenize(text.lower())
+        text = text.lower()
+
+        # remove punctuation
+        text = re.sub(r"[a-z]-[a-z]", ' ', text)
+        text = text.strip().translate(str.maketrans('', '', string.punctuation))
+        if 'bits' in text:
+            text = re.sub(r"\b\d+[s]{0,1}\b", 'NUMBER', text)   # remove numbers
+
+        combine_ngrams: bool = True
+        if combine_ngrams:
+            for ngram in utils.common_n_grams:
+                text = text.replace(ngram, ngram.replace(' ', '_'))
+
+
+        tokens = nltk.word_tokenize(text)
 
         # remove stop words 
         if remove_stop_words:
             tokens = [word for word in tokens if word not in stop_words]
+
+
+        stem_words: bool= True
+        if stem_words:
+            stemmer = PorterStemmer()
+            tokens = [stemmer.stem(word) for word in tokens]
 
         return tokens
 
@@ -98,14 +121,12 @@ class Corpus:
         term_freq_docs = []
         for doc in self.documents:
             term_freq_docs.append(Counter(doc.tokens))
-
         term_document_matrix = np.zeros((self.vocab.size_vocabulary, self.num_docs))
 
 
         for idx_doc, term_freq in enumerate(term_freq_docs):
             for word, freq in term_freq.items():
                 term_document_matrix[self.vocab.term2idx[word], idx_doc] = freq
-
         term_document_matrix /= term_document_matrix.sum(axis=0)
 
         self.term_doc_freq_matrix = term_document_matrix

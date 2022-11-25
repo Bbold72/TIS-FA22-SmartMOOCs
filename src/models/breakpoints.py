@@ -9,6 +9,7 @@ from scipy import spatial
 import seaborn as sns
 from matplotlib import pyplot as plt
 import ruptures as rpt
+from sklearn.metrics import silhouette_score
 from typing import List
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -74,6 +75,13 @@ if __name__ == '__main__':
     for transcript_name, corpus_times in corpuses.items():    # loop through each transcript
         topic_transitions_corpuses[transcript_name] = dict()
 
+        # divide raw transcript into 10 second intervals
+        base_corpus = Corpus(corpus_times[60].vocab, utils.merge_documents_time_interval(corpus_times[60].vocab.transcript_segements, 10))
+        base_corpus.create_term_doc_freq_matrix()
+
+        # create a mapping from 10 second interval to 60 second intervals
+        naive_time_label_map = utils.make_segment_label_mapping(base_corpus.documents, corpus_times[60].documents)
+
         for time_delta, corpus in corpus_times.items():       # loop through each time interval
 
             # calc breakpoint and make new document corpus based on them
@@ -82,6 +90,15 @@ if __name__ == '__main__':
             topic_transitions_corpus = Corpus(corpus.vocab, subtopic_docs)
             topic_transitions_corpus.create_term_doc_freq_matrix()
             topic_transitions_corpus.calc_similarity_ts()
+
+            # evaluate
+            # create a mapping from 10 second intervals to model predicted topic transitions
+            subtopic_label_map = utils.make_segment_label_mapping(base_corpus.documents, topic_transitions_corpus.documents)
+
+            # calculate silhouettes scores
+            if transcript_name == '04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea':
+                print(silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map))   # model topic transition score
+                print(silhouette_score(base_corpus.term_doc_freq_matrix.T, naive_time_label_map)) # naive, 60 second topic transition score
 
             # add to dict
             topic_transitions_corpuses[transcript_name][time_delta] = topic_transitions_corpus
