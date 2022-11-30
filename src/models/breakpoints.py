@@ -40,7 +40,9 @@ def calc_breakpoints(time_series: np.array) -> List[int]:
     std = np.std(time_series)
     result = algo.predict(pen=std)
 
-    return result
+    # only return breakpoints that are between endpoints
+    return [b for b in result if b != 0 and b != len(time_series)]
+    
 
 def merge_documents_breakpoints(documents: List[Segment], breakpoints: int) -> List[Segment]:
     '''
@@ -52,13 +54,27 @@ def merge_documents_breakpoints(documents: List[Segment], breakpoints: int) -> L
     
     returns: List[Segment] - list of transcript segments
     '''
-    subtopic_docs = []
+    # subtopic_docs = []
+    # start_idx = 0
+    # for id, end_idx in enumerate(breakpoints):
+    #     subtopic_docs.append(utils.merge_documents(documents[start_idx:end_idx], id))
+    #     start_idx = end_idx
+    # else:
+    #     subtopic_docs.append(utils.merge_documents(documents[end_idx:], id+1))
+
+    # return subtopic_docs
+    # if no breakpoints, merge all segments together
     start_idx = 0
-    for id, end_idx in enumerate(breakpoints):
-        subtopic_docs.append(utils.merge_documents(documents[start_idx:end_idx], id))
-        start_idx = end_idx
+    if len(breakpoints) == 0:
+        subtopic_docs = [utils.merge_documents(documents[start_idx:], 0)]
+
     else:
-        subtopic_docs.append(utils.merge_documents(documents[end_idx:], id+1))
+        subtopic_docs = []
+        for id, break_idx in enumerate(breakpoints):
+            subtopic_docs.append(utils.merge_documents(documents[start_idx:break_idx+1], id))
+            start_idx = break_idx + 1
+        else:
+            subtopic_docs.append(utils.merge_documents(documents[start_idx:], id+1))
 
     return subtopic_docs
 
@@ -91,24 +107,32 @@ if __name__ == '__main__':
             else:
                 breakpoints = calc_breakpoints(corpus.ts_cos_similarity)    
                 subtopic_docs = merge_documents_breakpoints(corpus.documents, breakpoints)
+               
             topic_transitions_corpus = Corpus(corpus.vocab, subtopic_docs)
             topic_transitions_corpus.create_term_doc_freq_matrix()
-            topic_transitions_corpus.calc_similarity_ts()
 
             # evaluate
             # create a mapping from 10 second intervals to model predicted topic transitions
-            subtopic_label_map = utils.make_segment_label_mapping(base_corpus.documents, topic_transitions_corpus.documents)
-            model_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map)   # model topic transition score
+            if breakpoints:
+                topic_transitions_corpus.breakpoints: List[int] = breakpoints
+                subtopic_label_map = utils.make_segment_label_mapping(base_corpus.documents, topic_transitions_corpus.documents)
+                model_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map)   # model topic transition score
+            else:
+                model_score = None 
 
             # calculate silhouettes scores
             if transcript_name == '04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea':
-                print(time_delta, naive_score, model_score)
+                print(time_delta, naive_score, model_score, breakpoints)
+                print([', '.join(word for word, count in doc_count.most_common(5)) for doc_count in topic_transitions_corpus.doc_term_freq])
+
 
             # add to dict
+            topic_transitions_corpus.naive_silouhette_score: float = naive_score
+            topic_transitions_corpus.model_silouhette_score: float = model_score
             topic_transitions_corpuses[transcript_name][time_delta] = topic_transitions_corpus
-
             # creae dataframe of results
             df = pd.DataFrame(subtopic_docs)
+            df['top_5_tokens'] = [', '.join(word for word, count in doc_count.most_common(5)) for doc_count in topic_transitions_corpus.doc_term_freq]
             df['file_name'] = transcript_name
             df['time_interval'] = time_delta
             df['silhouette_score'] = model_score

@@ -48,6 +48,8 @@ def process_transcript(file_path: Path) -> List[Segment]:
     Processes raw transcript file and outputs a list of all
     the text segments in the transcript
 
+    Note: Skips last segments which is just music
+
     Args:
         - file_path: complete file path and file name of transcript to process
 
@@ -64,6 +66,7 @@ def process_transcript(file_path: Path) -> List[Segment]:
             else:
                 segments.append(format_segment(seg))
                 seg = list()
+
     return segments
 
 

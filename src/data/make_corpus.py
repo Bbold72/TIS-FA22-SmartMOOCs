@@ -26,22 +26,36 @@ INTERMEDATE_DATA_DIR = Path.joinpath(DATA_DIR, 'intermediate')
 
 class Vocabulary:
 
-    def __init__(self, transcript_segments: List[Segment], remove_stop_words: bool = True) -> None:
+    def __init__(self, transcript_segments: List[Segment], remove_stop_words: bool = True, combine_ngrams: bool = True, stem_words: bool= True) -> None:
+        '''
+        Create unique set of tokens from raw transcript segments.
+
+        Args:
+            - remove_stop_words: bool - if true, removes stops words defined in NLTK
+            - combine_ngrams: bool - if true, combine common n-grams defined in utils
+            - stem_words: bool - if true, stem words using Porter stemmer
+        
+        returns: List[str]
+            list of word tokens
+        '''
         self.transcript_segements = transcript_segments
         self.vocabulary: List = []
-        self.size_vocabulary: int = 0
+        self.size: int = 0
         self.term2idx: Dict[str:int] = dict()
 
-        self._create_vocabulary(remove_stop_words=remove_stop_words)
+        self._remove_stop_words = remove_stop_words
+        self._combine_ngrams = combine_ngrams
+        self._stem_words = stem_words
+
+        self._create_vocabulary()
 
 
-    def _tokenize(self, text: str, remove_stop_words: bool) -> List[str]:
+    def _tokenize(self, text: str) -> List[str]:
         '''
         splits text into tokens
 
         Args:
-            - remove_stop_words: bool - if true, removes stops words
-                defined in NLTK
+            - remove_stop_words: bool - if true, removes stops words defined in NLTK
         
         returns: List[str]
             list of word tokens
@@ -54,8 +68,7 @@ class Vocabulary:
         if 'bits' in text:
             text = re.sub(r"\b\d+[s]{0,1}\b", 'NUMBER', text)   # remove numbers
 
-        combine_ngrams: bool = True
-        if combine_ngrams:
+        if self._combine_ngrams:
             for ngram in utils.common_n_grams:
                 text = text.replace(ngram, ngram.replace(' ', '_'))
 
@@ -63,39 +76,36 @@ class Vocabulary:
         tokens = nltk.word_tokenize(text)
 
         # remove stop words 
-        if remove_stop_words:
+        if self._remove_stop_words:
             tokens = [word for word in tokens if word not in stop_words]
 
 
-        stem_words: bool= True
-        if stem_words:
+        if self._stem_words:
             stemmer = PorterStemmer()
             tokens = [stemmer.stem(word) for word in tokens]
 
         return tokens
 
 
-    def _create_vocabulary(self, remove_stop_words: bool) -> None:
+    def _create_vocabulary(self) -> None:
         '''
         Tokenizes data and initializes corpus' vocabulary 
         Adds list of tokens to Segment
 
-        Args:
-            - remove_stop_words: bool - if true, removes stops words
-                defined in NLTK
+        Args: None
         
         returns: None
-            initializes vocabulary, size_vocabulary, term2idx
+            initializes vocabulary, size, term2idx
         '''
         vocab = set()
         for i, document in enumerate(self.transcript_segements):
-            tokens = self._tokenize(document.text, remove_stop_words)
+            tokens = self._tokenize(document.text)
             document.tokens = tokens
             self.transcript_segements[i] = document
             vocab.update(tokens)
 
         self.vocabulary = sorted(list(vocab))
-        self.size_vocabulary = len(vocab)
+        self.size = len(vocab)
         self.term2idx = {word:idx for word, idx in zip(vocab, range(len(vocab)))}
 
 
@@ -118,13 +128,13 @@ class Corpus:
         returns: None
             initializes term_doc_freq_matrix
         '''
-        term_freq_docs = []
+        self.doc_term_freq: List[Counter] = []
         for doc in self.documents:
-            term_freq_docs.append(Counter(doc.tokens))
-        term_document_matrix = np.zeros((self.vocab.size_vocabulary, self.num_docs))
+            self.doc_term_freq.append(Counter(doc.tokens))
+        term_document_matrix = np.zeros((self.vocab.size, self.num_docs))
 
 
-        for idx_doc, term_freq in enumerate(term_freq_docs):
+        for idx_doc, term_freq in enumerate(self.doc_term_freq):
             for word, freq in term_freq.items():
                 term_document_matrix[self.vocab.term2idx[word], idx_doc] = freq
         term_document_matrix /= term_document_matrix.sum(axis=0)
@@ -158,14 +168,11 @@ class Corpus:
         self.ts_cos_similarity = np.zeros(self.num_docs - 1)
         self.ts_divergence_similarity = np.zeros(self.num_docs - 1)
 
-        similarities = []
         for i in range(1, self.num_docs):
             v1, v2 = self.term_doc_freq_matrix[:, i-1], self.term_doc_freq_matrix[:, i]
             self.ts_cos_similarity[i-1] = f_cos(v1, v2)
             self.ts_divergence_similarity[i-1] = f_div(v1, v2)
         
-
-
 
 
 def main():
@@ -176,7 +183,7 @@ def main():
     corpuses = dict()
     for transcript_name, transcript_segments in transcripts.items():
         corpuses[transcript_name] = dict()
-        vocab = Vocabulary(transcript_segments, remove_stop_words=True)
+        vocab = Vocabulary(transcript_segments, remove_stop_words=True, combine_ngrams=True, stem_words=True)  
 
         for TIME_DELTA in TIME_DELTAS:
         # transcript_segments = transcripts['04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea']

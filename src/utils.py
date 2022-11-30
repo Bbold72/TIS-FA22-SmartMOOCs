@@ -49,20 +49,39 @@ def merge_documents_time_interval(documents: List[Segment], time_interval: int) 
         - List[Segment] - new list transcript segments that fall within time interval
 
     '''
+    # new_doc_list = []
+    # doc = []
+    # interval_so_far = datetime.timedelta(seconds=0)
+    # time_interval  = datetime.timedelta(seconds=time_interval)
+    # id = 0
+    # for i, segment in enumerate(documents):
+    #     doc.append(segment)
+    #     diff = segment.end - segment.beg
+    #     interval_so_far += diff
+    #     if interval_so_far > time_interval or i == len(documents) - 1:
+    #         new_doc_list.append(merge_documents(doc, id))
+    #         id += 1
+    #         doc = list()
+    #         interval_so_far = datetime.timedelta(seconds=0)
+    # return new_doc_list
     new_doc_list = []
     doc = []
     interval_so_far = datetime.timedelta(seconds=0)
     time_interval  = datetime.timedelta(seconds=time_interval)
     id = 0
+    start_idx = 0
     for i, segment in enumerate(documents):
-        doc.append(segment)
         diff = segment.end - segment.beg
         interval_so_far += diff
-        if interval_so_far > time_interval or i == len(documents) - 1:
-            new_doc_list.append(merge_documents(doc, id))
+        if interval_so_far > time_interval and segment.text[-1] in ['.', '?', '!']:
+            new_doc_list.append(merge_documents(documents[start_idx:i+1], id))
             id += 1
-            doc = list()
-            interval_so_far = datetime.timedelta(seconds=0)
+            start_idx = i + 1
+            interval_so_far = diff
+    else:
+        if start_idx < len(documents):
+            new_doc_list.append(merge_documents(documents[start_idx:], id))
+
     return new_doc_list
 
 
