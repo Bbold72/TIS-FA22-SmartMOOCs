@@ -7,8 +7,26 @@
 
 This project explores better ways to segment lectures based on topic transitions for the SmartMOOCs platform. See `proposal.pdf` for details.
 
+# Documentation
+
+## Directory Structure
+Project follows the structure outlined in [CookieCutter Data Science](https://drivendata.github.io/cookiecutter-data-science/).    
+<pre>
+📦data             - stores data files   
+ ┣ 📂intermediate  - processed data is stored here   
+ ┗ 📂raw           - raw transcript files organized by week and lesson   
+   ┗ 📂cs-410   
+📦notebooks        - Jupyter notebooks of data exploration and analysis   
+ ┣ 📜demo.ipynb    - demo of key project findings   
+ ┗ 📜vocab.ipynb   - data exploration of vocabulary used in all TIS    lectures   
+ 📦src             - scripts for project    
+ ┣ 📂data          - scripts to process data   
+ ┣ 📂models        - scripts model and evaluate time series breakpoints   
+ ┗ 📜utils.py      - module of helper functions    
+</pre>
 
 ## Downloading the Transcripts
+Although not necessary since the raw files are saved to the repo, here were the steps to download the raw transcript file from Coursera.   
 To download all video transcripts, pull the [coursera-dl](https://github.com/coursera-dl/coursera-dl) repo and use the `coursera-dl` script. The command below will download all raw transcript "txt" file and annotated transcript "srt" files:
 
 ```
