@@ -16,7 +16,7 @@ endif
 #################################################################################
 
 ## Make Dataset
-run: clean data breakpoints
+run: data breakpoints
 
 data: transcripts corpus
 

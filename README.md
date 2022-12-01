@@ -9,6 +9,26 @@ This project explores better ways to segment lectures based on topic transitions
 
 # Documentation
 
+## Setup
+Use our pre-saved conda environment
+
+```
+conda env create --name tis-project --file=environment.yml
+conda activate tis-project
+```
+
+or try to install from the requirement.txt
+
+```
+pip3 install -r requirements.txt
+```
+
+then install project as a package
+
+```
+pip install -e .
+```
+
 ## Directory Structure
 Project follows the structure outlined in [CookieCutter Data Science](https://drivendata.github.io/cookiecutter-data-science/).    
 <pre>
@@ -60,7 +80,29 @@ The API endpoints are outdated in `coursera-dl` and you'll need to update them. 
 ```
 
 
+## Running Project
+Run the Jupyter notebook `./notebooks/demo.ipynb` to replicate key results of project for one sample lesson, "Week 4 Lesson 1: Probabilistic Retrieval Model: Basic Idea"   
 
 
+The projects uses a Makefile to keep track of dependendicies and make it easier to replicate the project.  
 
+To run project on all transcript files:
+```
+make run
+```
+
+Alternatively, can run commands individually:
+
+1. Process raw transcript files
+```
+make transcripts
+```
+2. Create corpus out of transcript segments to calculate term-document frequency matrix and time series of similarity
+```
+make corpus
+```
+3. Estimate and evaluate time series breakpoints
+```
+make breakpoints
+```
 
