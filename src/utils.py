@@ -49,23 +49,7 @@ def merge_documents_time_interval(documents: List[Segment], time_interval: int) 
         - List[Segment] - new list transcript segments that fall within time interval
 
     '''
-    # new_doc_list = []
-    # doc = []
-    # interval_so_far = datetime.timedelta(seconds=0)
-    # time_interval  = datetime.timedelta(seconds=time_interval)
-    # id = 0
-    # for i, segment in enumerate(documents):
-    #     doc.append(segment)
-    #     diff = segment.end - segment.beg
-    #     interval_so_far += diff
-    #     if interval_so_far > time_interval or i == len(documents) - 1:
-    #         new_doc_list.append(merge_documents(doc, id))
-    #         id += 1
-    #         doc = list()
-    #         interval_so_far = datetime.timedelta(seconds=0)
-    # return new_doc_list
     new_doc_list = []
-    doc = []
     interval_so_far = datetime.timedelta(seconds=0)
     time_interval  = datetime.timedelta(seconds=time_interval)
     id = 0
@@ -86,6 +70,17 @@ def merge_documents_time_interval(documents: List[Segment], time_interval: int) 
 
 
 def make_segment_label_mapping(documents0: List[Segment], documents1: List[Segment]) -> List[int]:
+    '''
+    Creates a label map of Segment IDs from documents1 to documents2
+
+    Args:
+        - documents0: List[Segment] - list of trascript segments
+        - documente1: List[Segment] - list of trascript segments
+    
+    returns: 
+        - List[int] mapping
+
+    '''
     # make semgent0 the longer list of Segments
     if len(documents1) > len(documents0):
         documents0, documents1 = documents1, documents0
@@ -100,6 +95,7 @@ def make_segment_label_mapping(documents0: List[Segment], documents1: List[Segme
             label_map.append(label)
     
     return label_map
+
 
 common_n_grams = (
                     'probabilistic latent semantic analysis',
