@@ -4,8 +4,6 @@ from pathlib import Path
 import pickle
 from typing import List
 
-
-
 from src import utils
 from src.utils import Segment
 

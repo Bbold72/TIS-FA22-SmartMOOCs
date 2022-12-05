@@ -1,23 +1,13 @@
-import datetime
-import nltk
-from nltk.text import TextCollection
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import pickle
-from scipy import spatial
-import seaborn as sns
-from matplotlib import pyplot as plt
 import ruptures as rpt
 from sklearn.metrics import silhouette_score
 from typing import List
-nltk.download('punkt')
-nltk.download('stopwords')
-stop_words = set(nltk.corpus.stopwords.words('english'))
 
 from src import utils
 from src.utils import Segment
-from src.data import process_transcripts
 from src.data.make_corpus import Corpus, Vocabulary
 
 
@@ -54,16 +44,6 @@ def merge_documents_breakpoints(documents: List[Segment], breakpoints: int) -> L
     
     returns: List[Segment] - list of transcript segments
     '''
-    # subtopic_docs = []
-    # start_idx = 0
-    # for id, end_idx in enumerate(breakpoints):
-    #     subtopic_docs.append(utils.merge_documents(documents[start_idx:end_idx], id))
-    #     start_idx = end_idx
-    # else:
-    #     subtopic_docs.append(utils.merge_documents(documents[end_idx:], id+1))
-
-    # return subtopic_docs
-    # if no breakpoints, merge all segments together
     start_idx = 0
     if len(breakpoints) == 0:
         subtopic_docs = [utils.merge_documents(documents[start_idx:], 0)]
@@ -99,6 +79,7 @@ if __name__ == '__main__':
         naive_time_label_map = utils.make_segment_label_mapping(base_corpus.documents, corpus_times[60].documents)
         naive_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, naive_time_label_map) # naive, 60 second topic transition score
         corpus_times['base_60'] = corpus_times[60]
+        
         for time_delta, corpus in corpus_times.items():                            # loop through each time interval
 
             # calc breakpoint and make new document corpus based on them
@@ -113,7 +94,7 @@ if __name__ == '__main__':
 
             # evaluate
             # create a mapping from 10 second intervals to model predicted topic transitions
-            if breakpoints:
+            if breakpoints or time_delta == 'base_60':
                 topic_transitions_corpus.breakpoints: List[int] = breakpoints
                 subtopic_label_map = utils.make_segment_label_mapping(base_corpus.documents, topic_transitions_corpus.documents)
                 model_score = silhouette_score(base_corpus.term_doc_freq_matrix.T, subtopic_label_map)   # model topic transition score
@@ -130,6 +111,7 @@ if __name__ == '__main__':
             topic_transitions_corpus.naive_silouhette_score: float = naive_score
             topic_transitions_corpus.model_silouhette_score: float = model_score
             topic_transitions_corpuses[transcript_name][time_delta] = topic_transitions_corpus
+
             # creae dataframe of results
             df = pd.DataFrame(subtopic_docs)
             df['top_5_tokens'] = [', '.join(word for word, count in doc_count.most_common(5)) for doc_count in topic_transitions_corpus.doc_term_freq]
@@ -141,7 +123,7 @@ if __name__ == '__main__':
     
 
     # output file to intermediate folder taking file extension as input
-    output_file = lambda ext: Path.joinpath(INTERMEDATE_DATA_DIR, f'topic_transitions.{ext}')
+    output_file = lambda ext: Path.joinpath(DATA_DIR, f'topic_transitions.{ext}')
 
     # output data as pickle file
     print('saving corpuses')
@@ -152,10 +134,10 @@ if __name__ == '__main__':
     # export dataframe
     df = pd.concat(dataframes, axis=0)
     df['best'] = df.groupby(['file_name'])['silhouette_score'].transform(max) == df['silhouette_score']
-    # df['best'] = np.where(df['best'] == df['silhouette_score'],
-    #                         1,
-    #                         0
-    #                         )
+    df['best'] = np.where(df['silhouette_score'].isna(),
+                                np.nan,
+                                df['best']
+                            )
 
     df.to_csv(output_file('csv'), index=False)
     print(df)
