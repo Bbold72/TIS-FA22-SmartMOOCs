@@ -28,6 +28,9 @@ then install project as a package
 ```
 pip install -e .
 ```
+For details on how to use Jupyter notebooks locally, see the [documentation](https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/what_is_jupyter.html)
+
+Also, [Visual Studio Code](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) natively supports running Jupyter notebooks, which may be easier.
 
 ## Directory Structure
 Project follows the structure outlined in [CookieCutter Data Science](https://drivendata.github.io/cookiecutter-data-science/).    
@@ -81,7 +84,14 @@ The API endpoints are outdated in `coursera-dl` and you'll need to update them. 
 
 
 ## Running Project
-Run the Jupyter notebook `./notebooks/demo.ipynb` to replicate key results of project for one sample lesson, "Week 4 Lesson 1: Probabilistic Retrieval Model: Basic Idea"   
+I developed the project using [https://learn.microsoft.com/en-us/windows/wsl/install](Windows Subsystem for Linux) on Ubuntu 20.04. Any Unix based OS should not have an issue running project. Windows should be fine too but it may be difficult to use the Makefile, however, there are instructions to run each script individually if necessary.    
+
+Run the Jupyter notebook `./notebooks/demo.ipynb` to replicate key results of project for one sample lesson, "Week 4 Lesson 1: Probabilistic Retrieval Model: Basic Idea"     
+
+If you have issues running Juputer notebooks locally, you can run the demo as a python script.
+```
+python notebooks/demo.py
+```
 
 
 The projects uses a Makefile to keep track of dependendicies and make it easier to replicate the project.  
@@ -90,8 +100,9 @@ To run project on all transcript files:
 ```
 make run
 ```
+This will output a file `final_results.csv` in the data folder.
 
-Alternatively, can run commands individually:
+Alternatively, can run the commands individually:
 
 1. Process raw transcript files
 ```
@@ -106,3 +117,36 @@ make corpus
 make breakpoints
 ```
 
+If there are issues with make, you can run the python scripts directly:
+1. Process raw transcript files
+```
+python src/data/process_transcripts.py
+```
+2. Create corpus out of transcript segments to calculate term-document frequency matrix and time series of similarity
+```
+python src/data/make_corpus.py
+```
+3. Estimate and evaluate time series breakpoints
+```
+python src/models/breakpoints.py
+```
+
+
+### Using Docker
+If you are familiar with Docker, you can also use it to run the project although it is not necessary.
+
+Build image
+```
+docker build -t tis .
+```
+
+Running container and automatically run demo.py file
+```
+docker run tis
+```
+
+Attaching terminal to container. This allows you to run files individually and run using make.
+```
+docker run -it tis sh
+make run
+```
