@@ -101,12 +101,6 @@ if __name__ == '__main__':
             else:
                 model_score = None 
 
-            # calculate silhouettes scores
-            if transcript_name == '04_week-4/02_week-4-lessons/01_lesson-4-1-probabilistic-retrieval-model-basic-idea':
-                print(time_delta, naive_score, model_score, breakpoints)
-                print([', '.join(word for word, count in doc_count.most_common(5)) for doc_count in topic_transitions_corpus.doc_term_freq])
-
-
             # add to dict
             topic_transitions_corpus.naive_silouhette_score: float = naive_score
             topic_transitions_corpus.model_silouhette_score: float = model_score
@@ -120,14 +114,10 @@ if __name__ == '__main__':
             df['silhouette_score'] = model_score
             dataframes.append(df)
 
-    
-
-    # output file to intermediate folder taking file extension as input
-    output_file = lambda ext: Path.joinpath(DATA_DIR, f'topic_transitions.{ext}')
 
     # output data as pickle file
     print('saving corpuses')
-    with open(output_file('pkl'), 'wb') as f:
+    with open(Path.joinpath(DATA_DIR, 'topic_transitions.pkl'), 'wb') as f:
         pickle.dump(topic_transitions_corpuses, f)
 
 
@@ -139,7 +129,6 @@ if __name__ == '__main__':
                                 df['best']
                             )
 
-    df.to_csv(output_file('csv'), index=False)
-    print(df)
-    print(df.groupby(['file_name', 'time_interval']).agg({'end' : ['count', 'max']}))
+    df.to_csv(Path.joinpath(DATA_DIR, 'final_results.csv'), index=False)
+
             
