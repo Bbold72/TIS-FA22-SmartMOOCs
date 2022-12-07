@@ -9,6 +9,12 @@ This project explores better ways to segment lectures based on topic transitions
 
 # Documentation
 
+## Project Overview
+[SmartMOOCs](https://smartmoocs.web.illinois.edu/
+) is a project to incorporate AI/ML into **M**assive **O**pen **O**nline **C**ourses to improve learner experience. One avenue of research is to divide a lecture into subtopics to enhance the use experience. To automatically detect these topic transitions, this projet follows the methodology outlined in Wang and Goutte 2018. They detect topic change by evaluating the similarity between two consecutive documents. A trascript can be broken into equal length time segments, and the similarity between text in consecutive segments can be calculated, producing a time series. Finally, a breakpoint algorithm can be applied to the time series to detect topic transitions. 
+
+
+
 ## Setup
 Use our pre-saved conda environment
 
@@ -117,6 +123,8 @@ Project follows the structure outlined in [CookieCutter Data Science](https://dr
  ┣ 📂models        - scripts model and evaluate time series breakpoints   
  ┗ 📜utils.py      - module of helper functions    
 </pre>
+
+
 
 ## Downloading the Transcripts
 Although not necessary since the raw files are saved to the repo, here were the steps to download the raw transcript file from Coursera.   
