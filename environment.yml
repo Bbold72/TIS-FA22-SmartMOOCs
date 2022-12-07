@@ -11,4 +11,3 @@ dependencies:
   - pip:
     - ruptures
     - gensim
-prefix: /home/bxjxrx7/miniconda3/envs/tis-project
