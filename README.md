@@ -41,7 +41,7 @@ Also, [Visual Studio Code](https://code.visualstudio.com/docs/datascience/jupyte
 
 
 ## Running Project
-I developed the project using [https://learn.microsoft.com/en-us/windows/wsl/install](Windows Subsystem for Linux) on Ubuntu 20.04. Any Unix based OS should not have an issue running project. Windows should be fine too but it may be difficult to use the Makefile, however, there are instructions to run each script individually if necessary.    
+I developed the project using [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install) on Ubuntu 20.04. Any Unix based OS should not have an issue running project. Windows should be fine too but it may be difficult to use the Makefile, however, there are instructions to run each script individually if necessary.    
 
 Run the Jupyter notebook `./notebooks/demo.ipynb` to replicate key results of project for one sample lesson, "Week 4 Lesson 1: Probabilistic Retrieval Model: Basic Idea"     
 
@@ -159,3 +159,15 @@ The API endpoints are outdated in `coursera-dl` and you'll need to update them. 
         return OnDemandCourseMaterialItemsV1(
             dom['linked']['onDemandCourseMaterialItems.v2'])
 ```
+
+## References
+C. Truong, L. Oudre, N. Vayatis. Selective review of offline change 
+point detection methods. Signal Processing, 167:107299, 2020.   
+
+Killick, R., Fearnhead, P., & Eckley, I. (2012). Optimal detection of 
+changepoints with a linear computational cost. Journal of the 
+American Statistical Association, 107(500), 1590–1598.   
+
+Wang, Yuli and Goutte, Cyril. “Real-time Change Point Detection 
+using On-line Topic Models.” Association for Computational 
+Linguistics, 2018, pp. 2505-2515.
