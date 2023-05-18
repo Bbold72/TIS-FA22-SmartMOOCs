@@ -11,7 +11,7 @@ This project explores better ways to segment lectures based on topic transitions
 
 ## Project Overview
 [SmartMOOCs](https://smartmoocs.web.illinois.edu/
-) is a project to incorporate AI/ML into **M**assive **O**pen **O**nline **C**ourses to improve learner experience. One avenue of research is to divide a lecture into subtopics to enhance the use experience. To automatically detect these topic transitions, this projet follows the methodology outlined in Wang and Goutte 2018. They detect topic change by evaluating the similarity between two consecutive documents. A trascript can be broken into equal length time segments, and the similarity between text in consecutive segments can be calculated, producing a time series. Finally, a breakpoint algorithm can be applied to the time series to detect topic transitions. 
+) is a project to incorporate AI/ML into **M**assive **O**pen **O**nline **C**ourses to improve the learner experience. One avenue of research is to divide a lecture into subtopics to enhance the user experience. To automatically detect these topic transitions, this project follows the methodology outlined in Wang and Goutte 2018. They detect topic change by evaluating the similarity between two consecutive documents. A transcript can be broken into equal length time segments, and the similarity between text in consecutive segments can be calculated, producing a time series. Finally, a breakpoint algorithm can be applied to the time series to detect topic transitions. 
 
 
 
